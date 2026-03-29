@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 @import 'tailwindcss';
 
 :root {
@@ -49,3 +50,6 @@ a {
     color-scheme: dark;
   }
 }
+=======
+@import "tailwindcss";
+>>>>>>> 1840791 (Criado forms de autenticação e integração com Tailwind CSS)
