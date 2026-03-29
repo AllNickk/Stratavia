@@ -1,4 +1,4 @@
-import RegisterForm from "../../../components/auth/RegisterPage";
+import RegisterForm from "../../../components/auth/RegisterForm";
 
 export default function Registro() {
   return <RegisterForm />;

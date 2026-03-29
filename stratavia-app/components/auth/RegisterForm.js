@@ -205,7 +205,7 @@ export default function RegisterForm() {
 
       <div className="mt-6 text-center text-gray-600">
         Já possui uma conta?{' '}
-        <Link href="/login" className="text-blue-500 hover:text-blue-700 hover:underline">
+        <Link href="/" className="text-blue-500 hover:text-blue-700 hover:underline">
           Faça login
         </Link>
       </div>
