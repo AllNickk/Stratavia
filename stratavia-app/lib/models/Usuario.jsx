@@ -14,6 +14,10 @@ const UsuarioSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  nivelExperiencia: {
+    type: String,
+    required: true
+  },
   tipoPerfil: {
     type: String,
     enum: ['contribuinte', 'contador', 'empresario', 'estudante'],
