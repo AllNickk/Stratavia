@@ -48,7 +48,7 @@ export default function LoginForm() {
       localStorage.setItem('user', JSON.stringify(data.user));
       
       // Redirecionar para dashboard
-      router.push('/dashboard');
+      router.push('/chat');
       
     } catch (err) {
       setError(err.message);
@@ -67,7 +67,7 @@ export default function LoginForm() {
         </div>
       )}
       
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} method="POST">
         <div className="mb-4">
           <label className="block text-gray-700 mb-2">Email</label>
           <input

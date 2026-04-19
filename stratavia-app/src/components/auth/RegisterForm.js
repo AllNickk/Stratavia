@@ -81,7 +81,7 @@ export default function RegisterForm() {
       
       // Redirecionar após 3 segundos
       setTimeout(() => {
-        router.push('/login?registered=true');
+        router.push('/login');
       }, 3000);
       
     } catch (err) {
