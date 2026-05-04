@@ -6,7 +6,22 @@ import bcrypt from 'bcryptjs';
 
 export async function POST(req) {
   try {
-    const { name, email, password, profileType, experienceLevel } = await req.json();
+    const {
+      name,
+      email,
+      password,
+      profileType,
+      experienceLevel,
+      paisNascimento,
+      paisResidenciaAtual,
+      cidadeAtual,
+      nacionalidades,
+      residenciaFiscal,
+      atividadeProfissional,
+      origemRenda,
+      perfilFinanceiro,
+      mobilidadeInternacional
+    } = await req.json();
 
     const nameValid = validateName(name);
     if (!nameValid.valid) {
@@ -36,7 +51,16 @@ export async function POST(req) {
       email,
       senha: hashedPassword,
       tipoPerfil: profileType,
-      nivelExperiencia: experienceLevel
+      nivelExperiencia: experienceLevel,
+      paisNascimento,
+      paisResidenciaAtual,
+      cidadeAtual,
+      nacionalidades,
+      residenciaFiscal,
+      atividadeProfissional,
+      origemRenda,
+      perfilFinanceiro,
+      mobilidadeInternacional
     });
 
     return NextResponse.json(

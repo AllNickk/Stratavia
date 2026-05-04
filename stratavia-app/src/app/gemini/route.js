@@ -8,7 +8,7 @@ const ai = new GoogleGenAI(process.env.GEMINI_API_KEY);
 export async function POST(req) {
   try {
     await dbConnect();
-    const { message, conversationId, userId, paisResidencia, paisNascimento, paisRenda, faturamentoMensal, nomeEmpresa } = await req.json();
+    const { message, conversationId, userId } = await req.json();
 
 
     // Buscar histórico no MongoDB se a conversa já existir
@@ -25,9 +25,7 @@ export async function POST(req) {
 
     const chat = ai.chats.create({
       model: "gemini-3-flash-preview",
-      systemInstruction: `Você é um assistente especializado em leis fiscais e impostos. 
-      O usuário nasceu no país ` + paisNascimento + `, é um contribuinte do país ` + paisResidencia  + ` , faz sua renda em `+ paisRenda + `com uma renda mensal de ` + faturamentoMensal + 
-      (nomeEmpresa != null && ` e possui uma empresa chamada ` + nomeEmpresa),
+      systemInstruction: `Você é um assistente especializado em leis fiscais e impostos.`,
       chat: chatHistory
       // TODO: Pegar tipo de perfil e nivel de experiencia do usuário e alimentar para o systemInstruction
     });
