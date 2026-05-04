@@ -7,10 +7,10 @@ const ai = new GoogleGenAI(process.env.GEMINI_API_KEY);
 
 export async function POST(req) {
   try {
-    await dbConnect(); 
-    const { message, conversationId, userId} = await req.json();
+    await dbConnect();
+    const { message, conversationId, userId, paisResidencia, paisNascimento, paisRenda, faturamentoMensal, nomeEmpresa } = await req.json();
 
-    
+
     // Buscar histórico no MongoDB se a conversa já existir
     let chatHistory = [];
     if (conversationId) {
@@ -23,14 +23,16 @@ export async function POST(req) {
       }
     }
 
-    const chat = ai.chats.create({ 
+    const chat = ai.chats.create({
       model: "gemini-3-flash-preview",
-      systemInstruction: "Você é um assistente especializado em leis fiscais e impostos brasileiros.",
-      history: chatHistory
+      systemInstruction: `Você é um assistente especializado em leis fiscais e impostos. 
+      O usuário nasceu no país ` + paisNascimento + `, é um contribuinte do país ` + paisResidencia  + ` , faz sua renda em `+ paisRenda + `com uma renda mensal de ` + faturamentoMensal + 
+      (nomeEmpresa != null && ` e possui uma empresa chamada ` + nomeEmpresa),
+      chat: chatHistory
       // TODO: Pegar tipo de perfil e nivel de experiencia do usuário e alimentar para o systemInstruction
     });
 
-    const result = await chat.sendMessage({message: message});
+    const result = await chat.sendMessage({ message: message });
     const aiResponse = result.text;
 
     // Salvar ou atualizar a conversa no banco de dados
@@ -43,7 +45,7 @@ export async function POST(req) {
     if (conversationId) {
       conversa = await Conversa.findByIdAndUpdate(
         conversationId,
-        { 
+        {
           $push: { mensagens: { $each: novasMensagens } },
           atualizadoEm: Date.now()
         },
@@ -51,15 +53,15 @@ export async function POST(req) {
       );
     } else {
       conversa = await Conversa.create({
-        usuarioId: userId, //
+        usuarioId: userId,
         titulo: message.substring(0, 30) + "...",
         mensagens: novasMensagens
       });
     }
 
-    return NextResponse.json({ 
-      response: aiResponse, 
-      conversationId: conversa._id 
+    return NextResponse.json({
+      response: aiResponse,
+      conversationId: conversa._id
     });
 
   } catch (error) {

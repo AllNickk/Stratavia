@@ -10,6 +10,11 @@ const UsuarioSchema = new mongoose.Schema({
     enum: ['contribuinte', 'contador', 'empresario', 'estudante'],
     default: 'contribuinte'
   },
+  paisResidencia: {type: String, required: false},
+  paisNascimento: {type: String, required: false},
+  paisRenda: {type: String, required: false},
+  faturamentoMensal: {type: Double, required: false},
+  nomeEmpresa: {type: String, required: false},
   criadoEm: { type: Date, default: Date.now }
 });
 
