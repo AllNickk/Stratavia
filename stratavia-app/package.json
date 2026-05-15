@@ -10,6 +10,7 @@
     "test": "jest"
   },
   "dependencies": {
+    "@google/genai": "^1.50.1",
     "@tailwindcss/postcss": "^4.2.2",
     "bcryptjs": "^3.0.3",
     "cookie": "^1.1.1",
@@ -32,5 +33,4 @@
     "mongodb-memory-server": "^11.0.1",
     "tailwindcss": "^4.2.2"
   }
-  
 }

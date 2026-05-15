@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const MensagemSchema = new mongoose.Schema({
   papel: {
     type: String,
-    enum: ['usuario', 'IA'],
+    enum: ['user', 'model'],
     required: true
   },
   conteudo: {
