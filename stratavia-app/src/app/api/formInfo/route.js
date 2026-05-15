@@ -2,6 +2,26 @@ import dbConnect from '@/lib/mongodb';
 import Usuario from '@/lib/models/Usuario';
 import { NextResponse } from 'next/server';
 
+const parseBoolean = (value) => {
+  if (typeof value === 'boolean') return value;
+  if (typeof value !== 'string') return Boolean(value);
+  const normalized = value.trim().toLowerCase();
+  return ['true', 'sim', 'yes', '1'].includes(normalized);
+};
+
+const parseNumber = (value) => {
+  if (typeof value === 'number') return value;
+  if (typeof value !== 'string' || value.trim() === '') return undefined;
+  const numberValue = Number(value);
+  return Number.isFinite(numberValue) ? numberValue : undefined;
+};
+
+const parseArray = (value) => {
+  if (Array.isArray(value)) return value;
+  if (typeof value !== 'string') return [];
+  return value.split(',').map((item) => item.trim()).filter(Boolean);
+};
+
 export async function POST(req) {
   try {
     const data = await req.json();
@@ -23,12 +43,12 @@ export async function POST(req) {
         paisNascimento: formData.paisNascimento,
         paisResidenciaAtual: formData.paisResidenciaAtual,
         cidadeAtual: formData.cidadeAtual,
-        nacionalidades: formData.nacionalidades,
+        nacionalidades: parseArray(formData.nacionalidades),
 
         // Residência fiscal
         residenciaFiscal: {
-          declaradoEmOutroPais: formData.residenciaFiscal?.declaradoEmOutroPais,
-          vistoOuCidadaniaExterior: formData.residenciaFiscal?.vistoOuCidadaniaExterior,
+          declaradoEmOutroPais: parseBoolean(formData.residenciaFiscal?.declaradoEmOutroPais),
+          vistoOuCidadaniaExterior: parseBoolean(formData.residenciaFiscal?.vistoOuCidadaniaExterior),
           pretendeMudarProx12Meses: formData.residenciaFiscal?.pretendeMudarProx12Meses
         },
 
@@ -42,25 +62,25 @@ export async function POST(req) {
 
         // Origem da renda
         origemRenda: {
-          brasilPercent: formData.origemRenda?.brasilPercent,
-          estadosUnidosPercent: formData.origemRenda?.estadosUnidosPercent,
-          europaPercent: formData.origemRenda?.europaPercent,
-          outrosPercent: formData.origemRenda?.outrosPercent,
+          brasilPercent: parseNumber(formData.origemRenda?.brasilPercent),
+          estadosUnidosPercent: parseNumber(formData.origemRenda?.estadosUnidosPercent),
+          europaPercent: parseNumber(formData.origemRenda?.europaPercent),
+          outrosPercent: parseNumber(formData.origemRenda?.outrosPercent),
           localGeracao: formData.origemRenda?.localGeracao,
-          formasRecebimento: formData.origemRenda?.formasRecebimento
+          formasRecebimento: parseArray(formData.origemRenda?.formasRecebimento)
         },
 
         // Perfil financeiro
         perfilFinanceiro: {
-          rendaMensalBRL: formData.perfilFinanceiro?.rendaMensalBRL,
-          rendaAnualEstimado: formData.perfilFinanceiro?.rendaAnualEstimado,
-          reinveste: formData.perfilFinanceiro?.reinveste
+          rendaMensalBRL: parseNumber(formData.perfilFinanceiro?.rendaMensalBRL),
+          rendaAnualEstimado: parseNumber(formData.perfilFinanceiro?.rendaAnualEstimado),
+          reinveste: parseBoolean(formData.perfilFinanceiro?.reinveste)
         },
 
         // Mobilidade internacional
         mobilidadeInternacional: {
           dispostoMudarPais: formData.mobilidadeInternacional?.dispostoMudarPais,
-          paisesInteresse: formData.mobilidadeInternacional?.paisesInteresse,
+          paisesInteresse: parseArray(formData.mobilidadeInternacional?.paisesInteresse),
           tempoForaBrasil: formData.mobilidadeInternacional?.tempoForaBrasil
         }
       },

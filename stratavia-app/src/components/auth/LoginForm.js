@@ -47,8 +47,8 @@ export default function LoginForm() {
       // Salvar usuário no localStorage/context
       localStorage.setItem('user', JSON.stringify(data.user));
       
-      // Redirecionar para dashboard
-      router.push('/chat');
+      // Redirecionar para a página de dados do usuário
+      router.push('/yourInfo');
       
     } catch (err) {
       setError(err.message);
