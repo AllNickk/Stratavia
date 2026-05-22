@@ -1,2 +1,19 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=JetBrains+Mono:wght@500;600;700&display=swap');
 @import 'tailwindcss';
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background: #fcf8fa;
+}
+
+.chat-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-container::-webkit-scrollbar-thumb {
+  background-color: #e4e2e4;
+  border-radius: 9999px;
+}
 
