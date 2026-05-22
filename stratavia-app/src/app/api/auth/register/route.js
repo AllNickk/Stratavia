@@ -1,6 +1,6 @@
-import dbConnect from '@/lib/mongodb';
-import Usuario from '../../../../lib/models/Usuario';
-import { validateEmail, validatePassword, validateName } from '@/lib/validacoes';
+import dbConnect from '../../../../../lib/mongodb';
+import Usuario from '../../../../../lib/models/Usuario';
+import { validateEmail, validatePassword, validateName } from '../../../../../lib/validacoes';
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 

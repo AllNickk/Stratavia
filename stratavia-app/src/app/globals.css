@@ -1,2 +1,25 @@
 @import 'tailwindcss';
 
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-inter), Inter, Arial, sans-serif;
+  background: #fcf8fa;
+}
+
+.font-mono {
+  font-family: var(--font-jetbrains-mono), "JetBrains Mono", monospace;
+}
+
+.chat-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-container::-webkit-scrollbar-thumb {
+  background-color: #e4e2e4;
+  border-radius: 999px;
+}
