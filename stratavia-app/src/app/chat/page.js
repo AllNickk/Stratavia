@@ -17,11 +17,12 @@ const IconeSetaCima = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" h
 const IconeOlho = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><circle cx="12" cy="12" r="2" /><path d="M22 12c-2.667 4.667 -6 7 -10 7s-7.333 -2.333 -10 -7c2.667 -4.667 6 -7 10 -7s7.333 2.333 10 7" /></svg>;
 
 export default function pagina_chat() {
-  // Lógica visual da sidebar
   const [sidebar_aberta, set_sidebar_aberta] = useState(true);
   const [menu_perfil_aberto, set_menu_perfil_aberto] = useState(false);
+  
+  // AQUI: Adicionei o estado do nome do usuário
+  const [nome_usuario, set_nome_usuario] = useState("Carregando...");
 
-  // Lógica do chat
   const [historico_chats, set_historico_chats] = useState([
     { id: 1, titulo: "UAE Golden Visa vs Portugal" },
     { id: 2, titulo: "Singapore Tax Structure 2024" },
@@ -32,13 +33,31 @@ export default function pagina_chat() {
   const [ia_pensando, set_ia_pensando] = useState(false);
   const final_do_chat_ref = useRef(null);
 
+  // AQUI: Fetch automático do nome quando a tela carregar
+  useEffect(() => {
+    const buscar_usuario_logado = async () => {
+      try {
+        const resposta = await fetch("/api/usuarios/me");
+        if (resposta.ok) {
+          const dados = await resposta.json();
+          set_nome_usuario(dados.nome_completo);
+        } else {
+          set_nome_usuario("Usuário Desconhecido");
+        }
+      } catch (erro) {
+        console.error("Falha ao buscar perfil:", erro);
+        set_nome_usuario("Usuário Offline");
+      }
+    };
+    buscar_usuario_logado();
+  }, []);
+
   useEffect(() => {
     if (final_do_chat_ref.current) {
       final_do_chat_ref.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [mensagens_atuais, ia_pensando]);
 
-  // Função para fechar o menu de perfil se clicar fora (simplificada)
   const fechar_menus_flutuantes = () => {
     if (menu_perfil_aberto) set_menu_perfil_aberto(false);
   };
@@ -91,11 +110,8 @@ export default function pagina_chat() {
   return (
     <div className="fixed inset-0 z-[100] flex bg-white font-sans text-slate-900 overflow-hidden" onClick={fechar_menus_flutuantes}>
       
-      {/* --- BARRA LATERAL (SIDEBAR COLAPSÁVEL) --- */}
-      {/* A transição altera apenas a largura de 280px (aberto) para 76px (fechado) */}
       <aside className={`relative hidden md:flex flex-col h-full border-r border-slate-200 bg-white flex-shrink-0 transition-all duration-300 ease-in-out z-30 ${sidebar_aberta ? 'w-[280px]' : 'w-[76px]'}`}>
         
-        {/* Cabeçalho da Sidebar (Logo e Botão Toggle) */}
         <div className="h-16 flex items-center justify-center mt-2 mb-4 px-4">
           {sidebar_aberta ? (
             <div className="flex justify-between items-center w-full animate-fade-in">
@@ -118,7 +134,6 @@ export default function pagina_chat() {
               <div className="hidden group-hover:block text-slate-700">
                 <IconeMenuAbrir />
               </div>
-              {/* Tooltip super charmoso no hover */}
               <div className="absolute left-14 hidden group-hover:block bg-slate-900 text-white text-xs px-2.5 py-1.5 rounded whitespace-nowrap shadow-md z-50">
                 Expandir menu
               </div>
@@ -126,7 +141,6 @@ export default function pagina_chat() {
           )}
         </div>
         
-        {/* Botão Nova Análise */}
         <div className="px-4 mb-6 flex justify-center">
           {sidebar_aberta ? (
             <button onClick={iniciar_novo_chat} className="w-full flex items-center justify-center gap-2 bg-[#0f172a] text-white py-3 rounded-md font-semibold transition-all hover:bg-slate-800 active:scale-[0.98] text-sm shadow-sm">
@@ -142,7 +156,6 @@ export default function pagina_chat() {
           )}
         </div>
         
-        {/* Navegação de Módulos */}
         <nav className="flex-1 overflow-y-auto overflow-x-visible px-2 space-y-1">
           {sidebar_aberta && (
             <div className="px-4 py-2 mb-1 mt-2">
@@ -180,7 +193,6 @@ export default function pagina_chat() {
             )}
           </a>
 
-          {/* Histórico Recente (só aparece se aberto) */}
           {sidebar_aberta && (
             <>
               <div className="px-4 py-2 mt-6 mb-1">
@@ -197,10 +209,8 @@ export default function pagina_chat() {
           )}
         </nav>
 
-        {/* Rodapé da Sidebar (Avatar do Usuário) */}
         <div className="mt-auto relative p-4 border-t border-slate-200">
           
-          {/* Menu Flutuante (Popover) de Configurações da Conta */}
           {menu_perfil_aberto && (
             <div className="absolute bottom-[110%] left-4 mb-2 w-48 bg-white border border-slate-200 shadow-xl rounded-xl overflow-hidden z-50 animate-fade-in">
               <button className="w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-3 transition-colors">
@@ -221,7 +231,8 @@ export default function pagina_chat() {
             
             {sidebar_aberta && (
               <div className="text-left flex-1 truncate">
-                <p className="font-bold text-sm text-slate-900 truncate">Alexander Souza</p>
+                {/* AQUI: Renderizando o estado dinâmico do nome */}
+                <p className="font-bold text-sm text-slate-900 truncate">{nome_usuario}</p>
                 <p className="text-[10px] font-bold text-slate-400 tracking-wider">PRO MEMBER</p>
               </div>
             )}
@@ -235,10 +246,8 @@ export default function pagina_chat() {
         </div>
       </aside>
 
-      {/* --- ÁREA PRINCIPAL (CHAT) --- */}
       <main className="flex-1 flex flex-col h-full relative w-full bg-[#fcfcfc]">
         
-        {/* Cabeçalho Topo do Chat */}
         <header className="h-16 flex justify-between items-center px-8 z-10 flex-shrink-0 w-full border-b border-transparent">
           <h2 className="font-semibold text-slate-900 text-[15px]">Intelligence Hub</h2>
           <button className="hidden sm:block bg-[#059669] text-white px-4 py-2 rounded-md font-semibold text-xs hover:bg-[#047857] transition-colors">
@@ -246,14 +255,11 @@ export default function pagina_chat() {
           </button>
         </header>
 
-        {/* Textura pontilhada suave */}
         <div className="absolute inset-0 z-0 opacity-[0.4] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#e2e8f0 1px, transparent 1px)', backgroundSize: '24px 24px' }}></div>
 
-        {/* Área de Mensagens */}
         <div className={`flex-1 overflow-y-auto z-10 px-4 md:px-8 ${tela_inicial ? 'flex items-center justify-center' : 'pt-8 pb-32'}`}>
           <div className="w-full max-w-3xl mx-auto flex flex-col relative h-full">
             
-            {/* ESTADO VAZIO */}
             {tela_inicial && (
               <div className="flex flex-col items-center justify-center w-full pb-32 mt-auto mb-auto animate-fade-in">
                 <div className="text-center mb-12">
@@ -291,7 +297,6 @@ export default function pagina_chat() {
               </div>
             )}
 
-            {/* CHAT ATIVO */}
             {!tela_inicial && (
               <div className="flex flex-col gap-6 w-full pb-8">
                 {mensagens_atuais.map((msg) => (
@@ -322,7 +327,6 @@ export default function pagina_chat() {
           </div>
         </div>
 
-        {/* --- CAIXA DE INPUT --- */}
         <div className="absolute bottom-0 left-0 w-full p-6 z-20 bg-gradient-to-t from-white via-white to-transparent flex justify-center">
           <div className="w-full max-w-3xl flex flex-col relative">
             <form onSubmit={enviar_mensagem} className="bg-white border border-slate-200 rounded-2xl shadow-lg shadow-slate-200/50 relative flex items-end p-2 transition-all">

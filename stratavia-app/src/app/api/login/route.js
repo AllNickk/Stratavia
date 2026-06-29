@@ -36,13 +36,13 @@ export async function POST(requisicao) {
       );
     }
 
-    // AQUI ESTÁ A CORREÇÃO: Criando o cookie que o nosso proxy usa para validar a entrada!
     const banco_cookies = await cookies();
-    banco_cookies.set("sessao_stratavia", "autenticado", {
-      httpOnly: true, // Protege contra scripts maliciosos (XSS)
+    // AQUI MUDOU: Agora salvamos o email da pessoa no cookie para conseguir identificar ela depois!
+    banco_cookies.set("sessao_stratavia", usuario.email, {
+      httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      maxAge: 60 * 60 * 24 * 30, // Validade de 30 dias
-      path: "/", // Válido em toda a plataforma
+      maxAge: 60 * 60 * 24 * 30, // 30 dias
+      path: "/",
     });
 
     return Response.json(
