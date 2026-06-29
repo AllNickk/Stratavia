@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import InputFormulario from "@/components/input_formulario";
 import BotaoCarregamento from "@/components/botao_carregamento";
 
-// --- ÍCONES SVG ---
 const IconeGlobo = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round">
     <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
@@ -31,15 +30,6 @@ const IconeCadeado = () => (
     <rect x="5" y="11" width="14" height="10" rx="2" />
     <circle cx="12" cy="16" r="1" />
     <path d="M8 11v-4a4 4 0 0 1 8 0v4" />
-  </svg>
-);
-
-const IconeSetaDireita = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" strokeWidth="3" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round">
-    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-    <line x1="5" y1="12" x2="19" y2="12" />
-    <line x1="13" y1="18" x2="19" y2="12" />
-    <line x1="13" y1="6" x2="19" y2="12" />
   </svg>
 );
 
@@ -105,7 +95,6 @@ export default function pagina_login() {
 
       set_mensagem_sucesso("Acesso autorizado!");
       
-      // Aqui mandaríamos pro dashboard, mas como ainda não existe, mando pra home "/"
       setTimeout(() => {
         roteador.push("/"); 
       }, 2000);
@@ -122,7 +111,6 @@ export default function pagina_login() {
   return (
     <div className="w-full flex-grow flex flex-col items-center justify-center relative min-h-[calc(100vh-140px)] py-12 px-4">
       
-      {/* Background que mantivemos padronizado da tela de registro */}
       <div 
         className="absolute inset-0 z-0 opacity-90"
         style={{ backgroundImage: `url(${url_fundo_mapa})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
@@ -135,10 +123,9 @@ export default function pagina_login() {
       
       <main className="relative z-10 w-full max-w-[520px] flex flex-col items-center">
         
-        {/* Nova logo flutuante que veio no seu HTML */}
         <div className="flex flex-col items-center mb-10 gap-3">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-slate-900 rounded shadow-lg flex items-center justify-center text-emerald-500">
+            <div className="w-12 h-12 bg-slate-900 rounded shadow-lg flex items-center justify-center text-white">
               <IconeGlobo />
             </div>
             <h1 className="text-[42px] leading-none text-slate-900 tracking-tight font-bold">Stratavia</h1>
@@ -146,12 +133,11 @@ export default function pagina_login() {
           <p className="text-xs uppercase tracking-[0.4em] text-slate-500 font-bold mt-1">Global Intelligence Framework</p>
         </div>
 
-        {/* Card Principal */}
         <div className="bg-white shadow-xl shadow-slate-900/10 rounded-xl p-8 md:p-10 w-full border border-slate-200">
           
           <div className="mb-8">
             <h2 className="text-2xl font-bold text-slate-900 mb-2">Sign In</h2>
-            <p className="text-base text-slate-600">Access your secure tax intelligence dashboard.</p>
+            <p className="text-base text-slate-600">Access your secure tax intelligence support.</p>
           </div>
 
           {mensagem_erro && (
@@ -159,13 +145,13 @@ export default function pagina_login() {
               {mensagem_erro}
             </div>
           )}
+          {/* Mantive o alerta de sucesso verde porque é o padrão universal de UI para "ok" */}
           {mensagem_sucesso && (
             <div className="mb-6 p-4 bg-emerald-50 border-l-4 border-emerald-500 text-emerald-700 text-sm rounded">
               {mensagem_sucesso}
             </div>
           )}
 
-          {/* Social Logins no topo agora */}
           <div className="grid grid-cols-2 gap-4 mb-8">
             <button type="button" className="flex items-center justify-center gap-2 py-3 px-4 border border-slate-300 rounded hover:bg-slate-50 transition-all font-semibold text-slate-900 text-sm disabled:opacity-50" disabled={bloqueio_tela}>
               <IconeGoogle />
@@ -204,9 +190,8 @@ export default function pagina_login() {
               ao_mudar={lidar_mudanca_input}
               desabilitado={bloqueio_tela}
               icone_svg={<IconeCadeado />}
-              // Aqui a gente manda aquele linkzinho pra ficar do lado da label
               link_lateral={
-                <a href="#" className="text-xs text-emerald-500 hover:text-emerald-600 font-bold transition-colors">
+                <a href="#" className="text-xs text-slate-900 hover:text-slate-700 font-bold transition-colors">
                   Forgot password?
                 </a>
               }
@@ -216,7 +201,7 @@ export default function pagina_login() {
               <input 
                 id="lembrar" 
                 type="checkbox" 
-                className="w-4 h-4 text-emerald-500 border-slate-300 rounded focus:ring-emerald-500 cursor-pointer disabled:opacity-50" 
+                className="w-4 h-4 text-slate-900 border-slate-300 rounded focus:ring-slate-900 cursor-pointer disabled:opacity-50" 
                 disabled={bloqueio_tela}
               />
               <label htmlFor="lembrar" className="ml-3 text-sm text-slate-600 cursor-pointer select-none">
@@ -229,13 +214,12 @@ export default function pagina_login() {
               sucesso={mensagem_sucesso !== ""}
               texto_padrao="Sign In"
               texto_sucesso="Autenticado!"
-              icone_direito={<IconeSetaDireita />}
             />
             
           </form>
 
-          <p className="mt-8 text-center text-sm text-slate-600">
-            Don't have an account? <a href="/register" className="text-emerald-500 font-bold hover:underline">Create an account</a>
+          <p className="mt-8 text-center text-base text-slate-600">
+            Don't have an account? <a href="/register" className="text-slate-900 font-bold hover:underline underline-offset-4">Create an account</a>
           </p>
         </div>
       </main>
