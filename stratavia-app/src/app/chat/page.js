@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation"; // AQUI: Puxamos o roteador
 
 // --- ÍCONES SVG ---
 const IconeMais = () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" strokeWidth="2.5" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>;
@@ -17,10 +18,11 @@ const IconeSetaCima = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" h
 const IconeOlho = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><circle cx="12" cy="12" r="2" /><path d="M22 12c-2.667 4.667 -6 7 -10 7s-7.333 -2.333 -10 -7c2.667 -4.667 6 -7 10 -7s7.333 2.333 10 7" /></svg>;
 
 export default function pagina_chat() {
+  const roteador = useRouter();
+
   const [sidebar_aberta, set_sidebar_aberta] = useState(true);
   const [menu_perfil_aberto, set_menu_perfil_aberto] = useState(false);
   
-  // AQUI: Adicionei o estado do nome do usuário
   const [nome_usuario, set_nome_usuario] = useState("Carregando...");
 
   const [historico_chats, set_historico_chats] = useState([
@@ -33,7 +35,6 @@ export default function pagina_chat() {
   const [ia_pensando, set_ia_pensando] = useState(false);
   const final_do_chat_ref = useRef(null);
 
-  // AQUI: Fetch automático do nome quando a tela carregar
   useEffect(() => {
     const buscar_usuario_logado = async () => {
       try {
@@ -102,6 +103,16 @@ export default function pagina_chat() {
     if (evento.key === 'Enter' && !evento.shiftKey) {
       evento.preventDefault();
       enviar_mensagem(evento);
+    }
+  };
+
+  // AQUI: Função que chama a API e redireciona
+  const fazer_logout = async () => {
+    try {
+      await fetch("/api/logout", { method: "POST" });
+      roteador.push("/login");
+    } catch (erro) {
+      console.error("Erro ao tentar fazer logout:", erro);
     }
   };
 
@@ -217,7 +228,8 @@ export default function pagina_chat() {
                 <IconeConfig /> Configurações
               </button>
               <div className="h-px bg-slate-200 w-full"></div>
-              <button className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 flex items-center gap-3 transition-colors font-medium">
+              {/* AQUI: Adicionei o onClick chamando nossa função de logout */}
+              <button onClick={fazer_logout} className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 flex items-center gap-3 transition-colors font-medium">
                 <IconeSair /> Desconectar
               </button>
             </div>
@@ -231,7 +243,6 @@ export default function pagina_chat() {
             
             {sidebar_aberta && (
               <div className="text-left flex-1 truncate">
-                {/* AQUI: Renderizando o estado dinâmico do nome */}
                 <p className="font-bold text-sm text-slate-900 truncate">{nome_usuario}</p>
                 <p className="text-[10px] font-bold text-slate-400 tracking-wider">PRO MEMBER</p>
               </div>
