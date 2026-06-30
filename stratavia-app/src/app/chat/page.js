@@ -1,9 +1,9 @@
+// src/app/chat/page.js
 "use client";
 
 import { useState, useRef, useEffect } from "react";
 import Sidebar from "@/components/sidebar";
 
-// Os ícones específicos dos cards vazios do chat (que não foram pra sidebar)
 const IconeDashboard = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><rect x="4" y="4" width="6" height="6" rx="1" /><rect x="14" y="4" width="6" height="6" rx="1" /><rect x="4" y="14" width="6" height="6" rx="1" /><rect x="14" y="14" width="6" height="6" rx="1" /></svg>;
 const IconeBussola = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><polyline points="8 16 10 10 16 8 14 14 8 16" /><circle cx="12" cy="12" r="9" /></svg>;
 const IconeAnexo = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M15 7l-6.5 6.5a1.5 1.5 0 0 0 3 3l6.5 -6.5a3 3 0 0 0 -6 -6l-6.5 6.5a4.5 4.5 0 0 0 9 9l6.5 -6.5" /></svg>;
@@ -12,11 +12,29 @@ const IconeSetaCima = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" h
 const IconeOlho = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><circle cx="12" cy="12" r="2" /><path d="M22 12c-2.667 4.667 -6 7 -10 7s-7.333 -2.333 -10 -7c2.667 -4.667 6 -7 10 -7s7.333 2.333 10 7" /></svg>;
 
 export default function pagina_chat() {
+  const [historico_chats, set_historico_chats] = useState([]);
+  const [chat_ativo_id, set_chat_ativo_id] = useState(null);
   const [mensagens_atuais, set_mensagens_atuais] = useState([]);
+  
   const [texto_digitado, set_texto_digitado] = useState("");
   const [ia_pensando, set_ia_pensando] = useState(false);
-  
   const final_do_chat_ref = useRef(null);
+
+  // Assim que a tela carregar, a gente puxa todos os chats do usuário
+  useEffect(() => {
+    const carregar_historico = async () => {
+      try {
+        const resposta = await fetch("/api/chats");
+        if (resposta.ok) {
+          const dados = await resposta.json();
+          set_historico_chats(dados.chats);
+        }
+      } catch (erro) {
+        console.error("Erro ao carregar histórico:", erro);
+      }
+    };
+    carregar_historico();
+  }, []);
 
   useEffect(() => {
     if (final_do_chat_ref.current) {
@@ -24,29 +42,76 @@ export default function pagina_chat() {
     }
   }, [mensagens_atuais, ia_pensando]);
 
+  // Função disparada pela Sidebar
   const iniciar_novo_chat = () => {
+    set_chat_ativo_id(null);
     set_mensagens_atuais([]);
     set_texto_digitado("");
   };
 
-  const enviar_mensagem = (evento) => {
-    evento.preventDefault(); 
-    if (!texto_digitado.trim()) return;
+  // Função disparada pela Sidebar quando clica num chat do histórico
+  const carregar_chat_especifico = async (id_do_chat) => {
+    set_chat_ativo_id(id_do_chat);
+    set_ia_pensando(true);
+    set_mensagens_atuais([]); // Limpa a tela pra dar a sensação de carregando
+    
+    try {
+      const resposta = await fetch(`/api/chats/${id_do_chat}`);
+      if (resposta.ok) {
+        const dados = await resposta.json();
+        set_mensagens_atuais(dados.chat.mensagens);
+      }
+    } catch (erro) {
+      console.error("Erro ao puxar mensagens do chat:", erro);
+    } finally {
+      set_ia_pensando(false);
+    }
+  };
 
-    const nova_mensagem = { id: Date.now(), autor: "usuario", texto: texto_digitado };
-    set_mensagens_atuais((anteriores) => [...anteriores, nova_mensagem]);
+  const enviar_mensagem = async (evento) => {
+    evento.preventDefault(); 
+    if (!texto_digitado.trim() || ia_pensando) return;
+
+    const texto_enviado = texto_digitado;
     set_texto_digitado("");
     set_ia_pensando(true);
 
-    setTimeout(() => {
-      const resposta_ia = {
-        id: Date.now() + 1,
-        autor: "ia",
-        texto: "Esta é uma análise simulada. Em breve o processamento via Gemini será conectado aqui."
-      };
-      set_mensagens_atuais((anteriores) => [...anteriores, resposta_ia]);
+    // Adiciona visualmente pra ficar super rápido pro usuário (Optimistic UI)
+    const mensagem_provisoria = { id: Date.now().toString(), autor: "usuario", texto: texto_enviado };
+    set_mensagens_atuais((anteriores) => [...anteriores, mensagem_provisoria]);
+
+    try {
+      if (!chat_ativo_id) {
+        // É a PRIMEIRA MENSAGEM. Cria o chat inteiro no banco.
+        const resposta = await fetch("/api/chats", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ texto: texto_enviado }),
+        });
+        const dados = await resposta.json();
+        if (dados.sucesso) {
+          set_chat_ativo_id(dados.chat._id);
+          set_mensagens_atuais(dados.chat.mensagens);
+          // Coloca ele no topo da barra lateral
+          set_historico_chats((anteriores) => [dados.chat, ...anteriores]); 
+        }
+      } else {
+        // O chat JÁ EXISTE. Só adicionamos a nova mensagem.
+        const resposta = await fetch(`/api/chats/${chat_ativo_id}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ texto: texto_enviado }),
+        });
+        const dados = await resposta.json();
+        if (dados.sucesso) {
+          set_mensagens_atuais(dados.chat.mensagens);
+        }
+      }
+    } catch (erro) {
+      console.error("Erro ao enviar mensagem pro banco:", erro);
+    } finally {
       set_ia_pensando(false);
-    }, 1500);
+    }
   };
 
   const ajustar_altura_textarea = (evento) => {
@@ -63,16 +128,19 @@ export default function pagina_chat() {
     }
   };
 
-  const tela_inicial = mensagens_atuais.length === 0;
+  const tela_inicial = mensagens_atuais.length === 0 && !chat_ativo_id;
 
   return (
-    // Não precisamos mais do onClick aqui, pois criamos a inteligência de clique direto dentro da Sidebar!
     <div className="fixed inset-0 z-[100] flex bg-white font-sans text-slate-900 overflow-hidden">
       
-      {/* O Componente Limpo e Reutilizável! Passamos a função de limpar chat para o botão Nova Análise */}
-      <Sidebar ao_clicar_nova_analise={iniciar_novo_chat} />
+      {/* Sidebar recebendo as propriedades de inteligência */}
+      <Sidebar 
+        ao_clicar_nova_analise={iniciar_novo_chat} 
+        historico_chats={historico_chats}
+        chat_ativo_id={chat_ativo_id}
+        ao_selecionar_chat={carregar_chat_especifico}
+      />
 
-      {/* --- ÁREA PRINCIPAL (CHAT) --- */}
       <main className="flex-1 flex flex-col h-full relative w-full bg-[#fcfcfc]">
         
         <header className="h-16 flex justify-between items-center px-8 z-10 flex-shrink-0 w-full border-b border-transparent">
@@ -98,25 +166,19 @@ export default function pagina_chat() {
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-4xl mx-auto">
                   <div onClick={() => set_texto_digitado("Como funciona a otimização tributária para nômades?")} className="bg-white border border-slate-200 p-6 rounded-xl cursor-pointer hover:border-slate-300 hover:shadow-sm transition-all group">
-                    <div className="w-8 h-8 bg-[#dcfce7] text-[#059669] rounded-md flex items-center justify-center mb-4">
-                      <IconeDashboard />
-                    </div>
+                    <div className="w-8 h-8 bg-[#dcfce7] text-[#059669] rounded-md flex items-center justify-center mb-4"><IconeDashboard /></div>
                     <h3 className="font-bold text-slate-900 text-sm mb-2">Comparar Regras</h3>
                     <p className="text-[13px] text-slate-500 leading-relaxed">Avalie tratados fiscais e requisitos de residência entre múltiplos...</p>
                   </div>
 
                   <div onClick={() => set_texto_digitado("Qual o melhor caminho para cidadania na UE?")} className="bg-white border border-slate-200 p-6 rounded-xl cursor-pointer hover:border-slate-300 hover:shadow-sm transition-all group">
-                    <div className="w-8 h-8 bg-[#0f172a] text-white rounded-md flex items-center justify-center mb-4">
-                      <IconeBussola />
-                    </div>
+                    <div className="w-8 h-8 bg-[#0f172a] text-white rounded-md flex items-center justify-center mb-4"><IconeBussola /></div>
                     <h3 className="font-bold text-slate-900 text-sm mb-2">Residência Global</h3>
                     <p className="text-[13px] text-slate-500 leading-relaxed">Descubra caminhos ideais para programas de mobilidade...</p>
                   </div>
 
                   <div onClick={() => set_texto_digitado("Faça um mapeamento de fluxo de capital.")} className="bg-white border border-slate-200 p-6 rounded-xl cursor-pointer hover:border-slate-300 hover:shadow-sm transition-all group">
-                    <div className="w-8 h-8 bg-slate-100 text-slate-600 rounded-md flex items-center justify-center mb-4">
-                      <IconeOlho />
-                    </div>
+                    <div className="w-8 h-8 bg-slate-100 text-slate-600 rounded-md flex items-center justify-center mb-4"><IconeOlho /></div>
                     <h3 className="font-bold text-slate-900 text-sm mb-2">Inteligência de Ativos</h3>
                     <p className="text-[13px] text-slate-500 leading-relaxed">Mapeamento em tempo real de fluxo de capital em hubs...</p>
                   </div>
@@ -168,17 +230,9 @@ export default function pagina_chat() {
                 />
               </div>
               <div className="flex items-center gap-1 pb-1 pr-1 flex-shrink-0">
-                <button type="button" className="p-2 text-slate-400 hover:text-slate-600 transition-colors">
-                  <IconeAnexo />
-                </button>
-                <button type="button" className="p-2 text-slate-400 hover:text-slate-600 transition-colors mr-1">
-                  <IconeMic />
-                </button>
-                <button 
-                  type="submit"
-                  disabled={!texto_digitado.trim() || ia_pensando} 
-                  className="bg-[#0f172a] text-white w-9 h-9 rounded-lg flex items-center justify-center hover:bg-slate-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                >
+                <button type="button" className="p-2 text-slate-400 hover:text-slate-600 transition-colors"><IconeAnexo /></button>
+                <button type="button" className="p-2 text-slate-400 hover:text-slate-600 transition-colors mr-1"><IconeMic /></button>
+                <button type="submit" disabled={!texto_digitado.trim() || ia_pensando} className="bg-[#0f172a] text-white w-9 h-9 rounded-lg flex items-center justify-center hover:bg-slate-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
                   <IconeSetaCima />
                 </button>
               </div>

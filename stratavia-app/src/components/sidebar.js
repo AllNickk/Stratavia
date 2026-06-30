@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 
-// --- ÍCONES SVG DA SIDEBAR ---
 const IconeMais = () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" strokeWidth="2.5" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>;
 const IconeDashboard = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><rect x="4" y="4" width="6" height="6" rx="1" /><rect x="14" y="4" width="6" height="6" rx="1" /><rect x="4" y="14" width="6" height="6" rx="1" /><rect x="14" y="14" width="6" height="6" rx="1" /></svg>;
 const IconeBussola = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><polyline points="8 16 10 10 16 8 14 14 8 16" /><circle cx="12" cy="12" r="9" /></svg>;
@@ -13,24 +12,20 @@ const IconeGlobo = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" heig
 const IconeMenuFechar = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><rect x="4" y="4" width="16" height="16" rx="2" /><path d="M9 4v16" /><path d="M15 10l-2 2l2 2" /></svg>;
 const IconeMenuAbrir = () => <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><rect x="4" y="4" width="16" height="16" rx="2" /><path d="M9 4v16" /><path d="M14 10l2 2l-2 2" /></svg>;
 
-export default function Sidebar({ ao_clicar_nova_analise }) {
+export default function Sidebar({ 
+  ao_clicar_nova_analise, 
+  historico_chats = [], 
+  chat_ativo_id, 
+  ao_selecionar_chat 
+}) {
   const roteador = useRouter();
-  const pathname = usePathname(); // O espião da rota atual
+  const pathname = usePathname();
 
   const [sidebar_aberta, set_sidebar_aberta] = useState(true);
   const [menu_perfil_aberto, set_menu_perfil_aberto] = useState(false);
   const [nome_usuario, set_nome_usuario] = useState("Carregando...");
-  
-  // Referência para o React saber onde está o menu do perfil
   const perfilRef = useRef(null);
 
-  const [historico_chats] = useState([
-    { id: 1, titulo: "UAE Golden Visa vs Portugal" },
-    { id: 2, titulo: "Singapore Tax Structure 2024" },
-    { id: 3, titulo: "Remote Work Hubs in EU" }
-  ]);
-
-  // Busca o usuário logado
   useEffect(() => {
     const buscar_usuario_logado = async () => {
       try {
@@ -48,7 +43,6 @@ export default function Sidebar({ ao_clicar_nova_analise }) {
     buscar_usuario_logado();
   }, []);
 
-  // Lógica inteligente para fechar o menu flutuante se clicar fora dele
   useEffect(() => {
     const lidar_clique_fora = (evento) => {
       if (perfilRef.current && !perfilRef.current.contains(evento.target)) {
@@ -69,14 +63,10 @@ export default function Sidebar({ ao_clicar_nova_analise }) {
   };
 
   const clicar_novo = () => {
-    if (ao_clicar_nova_analise) {
-      ao_clicar_nova_analise();
-    } else {
-      roteador.push("/chat");
-    }
+    if (ao_clicar_nova_analise) ao_clicar_nova_analise();
+    else roteador.push("/chat");
   };
 
-  // Função pra calcular as cores dinâmicas dos botões baseado na página atual
   const obter_classes_link = (caminho) => {
     const ativo = pathname === caminho;
     const base = "relative flex items-center transition-colors rounded-md font-medium text-sm group";
@@ -87,8 +77,6 @@ export default function Sidebar({ ao_clicar_nova_analise }) {
 
   return (
     <aside className={`relative hidden md:flex flex-col h-full border-r border-slate-200 bg-white flex-shrink-0 transition-all duration-300 ease-in-out z-30 ${sidebar_aberta ? 'w-[280px]' : 'w-[76px]'}`}>
-      
-      {/* Cabeçalho */}
       <div className="h-16 flex items-center justify-center mt-2 mb-4 px-4">
         {sidebar_aberta ? (
           <div className="flex justify-between items-center w-full animate-fade-in">
@@ -109,7 +97,6 @@ export default function Sidebar({ ao_clicar_nova_analise }) {
         )}
       </div>
       
-      {/* Botão Nova Análise */}
       <div className="px-4 mb-6 flex justify-center">
         {sidebar_aberta ? (
           <button onClick={clicar_novo} className="w-full flex items-center justify-center gap-2 bg-[#0f172a] text-white py-3 rounded-md font-semibold transition-all hover:bg-slate-800 active:scale-[0.98] text-sm shadow-sm">
@@ -123,7 +110,6 @@ export default function Sidebar({ ao_clicar_nova_analise }) {
         )}
       </div>
       
-      {/* Navegação - AQUI ESTÁ A CORREÇÃO DO BUG DA BARRA DE ROLAGEM: overflow-visible libera os tooltips */}
       <nav className={`flex-1 px-2 space-y-1 ${sidebar_aberta ? 'overflow-y-auto' : 'overflow-visible'}`}>
         {sidebar_aberta && (
           <div className="px-4 py-2 mb-1 mt-2">
@@ -136,13 +122,11 @@ export default function Sidebar({ ao_clicar_nova_analise }) {
           {sidebar_aberta && <span>Dashboard</span>}
           {!sidebar_aberta && <div className="absolute left-[60px] hidden group-hover:block bg-slate-900 text-white text-xs px-2.5 py-1.5 rounded whitespace-nowrap shadow-md z-50">Dashboard</div>}
         </a>
-        
         <a href="/exploration" className={obter_classes_link("/exploration")}>
           <IconeBussola /> 
           {sidebar_aberta && <span>Exploration</span>}
           {!sidebar_aberta && <div className="absolute left-[60px] hidden group-hover:block bg-slate-900 text-white text-xs px-2.5 py-1.5 rounded whitespace-nowrap shadow-md z-50">Exploration</div>}
         </a>
-        
         <a href="/settings" className={obter_classes_link("/settings")}>
           <IconeConfig /> 
           {sidebar_aberta && <span>Settings</span>}
@@ -156,7 +140,16 @@ export default function Sidebar({ ao_clicar_nova_analise }) {
             </div>
             <div className="space-y-1">
               {historico_chats.map((chat) => (
-                <a key={chat.id} href="#" className="block px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-slate-900 rounded-md truncate transition-colors">
+                <a 
+                  key={chat._id} 
+                  href="#" 
+                  onClick={(e) => { e.preventDefault(); ao_selecionar_chat(chat._id); }}
+                  className={`block px-4 py-2 text-sm rounded-md truncate transition-colors ${
+                    chat_ativo_id === chat._id 
+                      ? "bg-slate-100 text-slate-900 font-semibold" 
+                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                  }`}
+                >
                   {chat.titulo}
                 </a>
               ))}
@@ -165,9 +158,7 @@ export default function Sidebar({ ao_clicar_nova_analise }) {
         )}
       </nav>
 
-      {/* Rodapé da Sidebar (Refenciado para cliques externos) */}
       <div ref={perfilRef} className="mt-auto relative p-4 border-t border-slate-200">
-        
         {menu_perfil_aberto && (
           <div className="absolute bottom-[110%] left-4 mb-2 w-48 bg-white border border-slate-200 shadow-xl rounded-xl overflow-hidden z-50 animate-fade-in">
             <button className="w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-3 transition-colors">
@@ -191,9 +182,7 @@ export default function Sidebar({ ao_clicar_nova_analise }) {
           )}
 
           {!sidebar_aberta && (
-             <div className="absolute left-14 hidden group-hover:block bg-slate-900 text-white text-xs px-2.5 py-1.5 rounded whitespace-nowrap shadow-md z-50">
-               Perfil e Conta
-             </div>
+             <div className="absolute left-14 hidden group-hover:block bg-slate-900 text-white text-xs px-2.5 py-1.5 rounded whitespace-nowrap shadow-md z-50">Perfil e Conta</div>
           )}
         </button>
       </div>
