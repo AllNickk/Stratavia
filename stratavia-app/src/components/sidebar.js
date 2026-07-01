@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 
-// --- ÍCONES ---
 const IconeMais = () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" strokeWidth="2.5" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>;
 const IconeDashboard = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><rect x="4" y="4" width="6" height="6" rx="1" /><rect x="14" y="4" width="6" height="6" rx="1" /><rect x="4" y="14" width="6" height="6" rx="1" /><rect x="14" y="14" width="6" height="6" rx="1" /></svg>;
 const IconeBussola = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><polyline points="8 16 10 10 16 8 14 14 8 16" /><circle cx="12" cy="12" r="9" /></svg>;
@@ -21,42 +20,23 @@ export default function Sidebar({
   historico_chats = [], 
   chat_ativo_id, 
   ao_selecionar_chat,
-  recarregar_historico // Passado pelo pai pra forçar atualização
+  recarregar_historico,
+  nome_usuario // Recebemos o nome via propriedade agora
 }) {
   const roteador = useRouter();
   const pathname = usePathname();
 
   const [sidebar_aberta, set_sidebar_aberta] = useState(true);
   const [menu_perfil_aberto, set_menu_perfil_aberto] = useState(false);
-  const [nome_usuario, set_nome_usuario] = useState("Carregando...");
-  
-  // Controle de qual chat está com o menu de opções (três pontinhos) aberto
   const [id_menu_opcoes_aberto, set_id_menu_opcoes_aberto] = useState(null);
   
   const perfilRef = useRef(null);
 
   useEffect(() => {
-    const buscar_usuario_logado = async () => {
-      try {
-        const resposta = await fetch("/api/usuarios/me");
-        if (resposta.ok) {
-          const dados = await resposta.json();
-          set_nome_usuario(dados.nome_completo);
-        }
-      } catch (erro) {
-        set_nome_usuario("Usuário Offline");
-      }
-    };
-    buscar_usuario_logado();
-  }, []);
-
-  // Fechar menus se clicar fora
-  useEffect(() => {
     const lidar_clique_fora = (evento) => {
       if (perfilRef.current && !perfilRef.current.contains(evento.target)) {
         set_menu_perfil_aberto(false);
       }
-      // Se clicar em qualquer lugar e não for no menu do chat, fecha ele
       if (!evento.target.closest('.menu-chat-container')) {
         set_id_menu_opcoes_aberto(null);
       }
@@ -77,28 +57,24 @@ export default function Sidebar({
     else roteador.push("/chat");
   };
 
-  // Funções de manipulação do Chat
   const apagar_chat = async (id, evento) => {
     evento.stopPropagation();
     try {
       await fetch(`/api/chats/${id}`, { method: "DELETE" });
       set_id_menu_opcoes_aberto(null);
-      if (chat_ativo_id === id) ao_clicar_nova_analise(); // Limpa a tela se apagou o chat atual
+      if (chat_ativo_id === id) ao_clicar_nova_analise(); 
       if (recarregar_historico) recarregar_historico();
     } catch (erro) { console.error("Erro ao apagar", erro); }
   };
 
   const alternar_fixacao_chat = async (chat, evento) => {
     evento.stopPropagation();
-    
-    // Regra do negócio: máximo 3 fixados
     const qtd_fixados = historico_chats.filter(c => c.fixado).length;
     if (!chat.fixado && qtd_fixados >= 3) {
       alert("Você já atingiu o limite de 3 análises fixadas.");
       set_id_menu_opcoes_aberto(null);
       return;
     }
-
     try {
       await fetch(`/api/chats/${chat._id}`, {
         method: "PATCH",
@@ -194,13 +170,11 @@ export default function Sidebar({
                     }`}
                   >
                     <div className="truncate flex items-center gap-2">
-                      {/* O ícone de pino aparece do lado do título se tiver fixado */}
                       {chat.fixado && <span className="text-emerald-600 flex-shrink-0"><IconePino /></span>}
                       <span className="truncate">{chat.titulo}</span>
                     </div>
                   </a>
                   
-                  {/* Botão de 3 pontinhos (aparece só no hover do mouse) */}
                   <button 
                     onClick={(e) => { 
                       e.stopPropagation(); 
@@ -213,19 +187,12 @@ export default function Sidebar({
                     <IconeMaisOpcoes />
                   </button>
 
-                  {/* Dropdown Menu de opções do Chat */}
                   {id_menu_opcoes_aberto === chat._id && (
                     <div className="absolute right-2 top-8 w-36 bg-white border border-slate-200 shadow-lg rounded-md overflow-hidden z-50 py-1">
-                      <button 
-                        onClick={(e) => alternar_fixacao_chat(chat, e)}
-                        className="w-full text-left px-3 py-2 text-[13px] text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                      >
+                      <button onClick={(e) => alternar_fixacao_chat(chat, e)} className="w-full text-left px-3 py-2 text-[13px] text-slate-700 hover:bg-slate-50 flex items-center gap-2">
                         <IconePino /> {chat.fixado ? 'Desfixar' : 'Fixar no topo'}
                       </button>
-                      <button 
-                        onClick={(e) => apagar_chat(chat._id, e)}
-                        className="w-full text-left px-3 py-2 text-[13px] text-red-600 hover:bg-red-50 flex items-center gap-2 font-medium"
-                      >
+                      <button onClick={(e) => apagar_chat(chat._id, e)} className="w-full text-left px-3 py-2 text-[13px] text-red-600 hover:bg-red-50 flex items-center gap-2 font-medium">
                         <IconeLixeira /> Excluir
                       </button>
                     </div>
@@ -252,14 +219,12 @@ export default function Sidebar({
 
         <button onClick={() => set_menu_perfil_aberto(!menu_perfil_aberto)} className={`w-full flex items-center rounded-lg hover:bg-slate-50 transition-colors group relative ${sidebar_aberta ? 'p-2 gap-3' : 'justify-center p-1'}`}>
           <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuCl5V7MKMp2WXyFFkfjq3UgQtOaal7ViTB2EJsUwkQjYbcRiCsc8bcsTEMMi4UX0TIte0FJCu_8Un5mYHi5mFxmbMUoxuHzLW9jikAzkmyuxz7ImF_MqshXKtVvW1ybD7nwNKUF4J03f5okXKTwYV_dahVMt3xt2RbvWgMiPs9k-nbNmNu8xhrw-5DES6-Wj4QpVI_cFKRXmPYl5qOxnUEUDE0e4sbIdnC9lQdpG02wdb-WdNaccP4Q2h2Gt7KMomlDMN_nDNQmmo8" alt="Perfil" className="w-9 h-9 rounded-full object-cover border border-slate-300 flex-shrink-0" />
-          
           {sidebar_aberta && (
             <div className="text-left flex-1 truncate">
               <p className="font-bold text-sm text-slate-900 truncate">{nome_usuario}</p>
               <p className="text-[10px] font-bold text-slate-400 tracking-wider">PRO MEMBER</p>
             </div>
           )}
-
           {!sidebar_aberta && (
              <div className="absolute left-14 hidden group-hover:block bg-slate-900 text-white text-xs px-2.5 py-1.5 rounded whitespace-nowrap shadow-md z-50">Perfil e Conta</div>
           )}
