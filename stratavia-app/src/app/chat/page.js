@@ -2,8 +2,9 @@
 
 import { useState, useRef, useEffect } from "react";
 import Sidebar from "@/components/sidebar";
-import ReactMarkdown from 'react-markdown'; // <--- AQUI! Interpretador de formatação
+import ReactMarkdown from 'react-markdown';
 
+// --- ÍCONES DO CHAT (Mantidos aqui os que são exclusivos dos cards iniciais) ---
 const IconeDashboard = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><rect x="4" y="4" width="6" height="6" rx="1" /><rect x="14" y="4" width="6" height="6" rx="1" /><rect x="4" y="14" width="6" height="6" rx="1" /><rect x="14" y="14" width="6" height="6" rx="1" /></svg>;
 const IconeBussola = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><polyline points="8 16 10 10 16 8 14 14 8 16" /><circle cx="12" cy="12" r="9" /></svg>;
 const IconeAnexo = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M15 7l-6.5 6.5a1.5 1.5 0 0 0 3 3l6.5 -6.5a3 3 0 0 0 -6 -6l-6.5 6.5a4.5 4.5 0 0 0 9 9l6.5 -6.5" /></svg>;
@@ -12,14 +13,17 @@ const IconeSetaCima = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" h
 const IconeOlho = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><circle cx="12" cy="12" r="2" /><path d="M22 12c-2.667 4.667 -6 7 -10 7s-7.333 -2.333 -10 -7c2.667 -4.667 6 -7 10 -7s7.333 2.333 10 7" /></svg>;
 
 export default function pagina_chat() {
+  // --- ESTADOS DO COMPONENTE ---
   const [historico_chats, set_historico_chats] = useState([]);
   const [chat_ativo_id, set_chat_ativo_id] = useState(null);
   const [mensagens_atuais, set_mensagens_atuais] = useState([]);
-  
   const [texto_digitado, set_texto_digitado] = useState("");
   const [ia_pensando, set_ia_pensando] = useState(false);
+  
+  // Referência para controlar a rolagem automática da tela
   const final_do_chat_ref = useRef(null);
 
+  // Função para puxar a lista de chats salvos no MongoDB
   const carregar_historico = async () => {
     try {
       const resposta = await fetch("/api/chats");
@@ -32,26 +36,30 @@ export default function pagina_chat() {
     }
   };
 
+  // Carrega o histórico da sidebar assim que a página abre
   useEffect(() => {
     carregar_historico();
   }, []);
 
+  // Monitora as mensagens. Se entrar texto novo, rola a página pro final
   useEffect(() => {
     if (final_do_chat_ref.current) {
       final_do_chat_ref.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [mensagens_atuais, ia_pensando]);
 
+  // Reseta a tela para o estado de "Nova Análise"
   const iniciar_novo_chat = () => {
     set_chat_ativo_id(null);
     set_mensagens_atuais([]);
     set_texto_digitado("");
   };
 
+  // Busca as mensagens de um chat antigo clicado na barra lateral
   const carregar_chat_especifico = async (id_do_chat) => {
     set_chat_ativo_id(id_do_chat);
     set_ia_pensando(true);
-    set_mensagens_atuais([]); 
+    set_mensagens_atuais([]); // Limpa a tela antes de renderizar as antigas
     
     try {
       const resposta = await fetch(`/api/chats/${id_do_chat}`);
@@ -66,6 +74,7 @@ export default function pagina_chat() {
     }
   };
 
+  // Gerencia o envio de mensagens (tanto novas quanto respostas)
   const enviar_mensagem = async (evento) => {
     evento.preventDefault(); 
     if (!texto_digitado.trim() || ia_pensando) return;
@@ -74,11 +83,13 @@ export default function pagina_chat() {
     set_texto_digitado("");
     set_ia_pensando(true);
 
+    // Adiciona a mensagem na tela na hora (interface otimista)
     const mensagem_provisoria = { id: Date.now().toString(), autor: "usuario", texto: texto_enviado };
-    set_mensagens_atuais((anteriores) => [...anteriores, mensagem_provisoria]);
+    set_mensagens_atuais((anteriores) => [...anteriores, message_provisoria]);
 
     try {
       if (!chat_ativo_id) {
+        // Fluxo A: É o primeiro input, precisa criar o chat no Mongo
         const resposta = await fetch("/api/chats", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -88,9 +99,10 @@ export default function pagina_chat() {
         if (dados.sucesso) {
           set_chat_ativo_id(dados.chat._id);
           set_mensagens_atuais(dados.chat.mensagens);
-          carregar_historico(); // Atualiza a lista da barra lateral
+          carregar_historico(); // Atualiza a barra lateral com o novo item
         }
       } else {
+        // Fluxo B: O chat já existe, só empurra mais uma linha pro array
         const resposta = await fetch(`/api/chats/${chat_ativo_id}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -99,7 +111,7 @@ export default function pagina_chat() {
         const dados = await resposta.json();
         if (dados.sucesso) {
           set_mensagens_atuais(dados.chat.mensagens);
-          carregar_historico(); // Para jogar o chat ativo pro topo da lista
+          carregar_historico(); // Joga o chat atual pro topo da lista
         }
       }
     } catch (erro) {
@@ -109,6 +121,7 @@ export default function pagina_chat() {
     }
   };
 
+  // Faz a caixa de texto crescer para baixo conforme o usuário digita textos longos
   const ajustar_altura_textarea = (evento) => {
     const elemento = evento.target;
     elemento.style.height = 'auto';
@@ -116,6 +129,7 @@ export default function pagina_chat() {
     set_texto_digitado(elemento.value);
   };
 
+  // Atalho: se apertar Enter sozinho envia, se for Shift+Enter quebra a linha
   const apertou_enter = (evento) => {
     if (evento.key === 'Enter' && !evento.shiftKey) {
       evento.preventDefault();
@@ -128,14 +142,16 @@ export default function pagina_chat() {
   return (
     <div className="fixed inset-0 z-[100] flex bg-white font-sans text-slate-900 overflow-hidden">
       
+      {/* Sidebar modular que criamos */}
       <Sidebar 
         ao_clicar_nova_analise={iniciar_novo_chat} 
         historico_chats={historico_chats}
         chat_ativo_id={chat_ativo_id}
         ao_selecionar_chat={carregar_chat_especifico}
-        recarregar_historico={carregar_historico} // Passamos a função de atualizar a tela
+        recarregar_historico={carregar_historico}
       />
 
+      {/* --- ÁREA DO CHAT --- */}
       <main className="flex-1 flex flex-col h-full relative w-full bg-[#fcfcfc]">
         
         <header className="h-16 flex justify-between items-center px-8 z-10 flex-shrink-0 w-full border-b border-transparent">
@@ -147,9 +163,11 @@ export default function pagina_chat() {
 
         <div className="absolute inset-0 z-0 opacity-[0.4] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#e2e8f0 1px, transparent 1px)', backgroundSize: '24px 24px' }}></div>
 
-        <div className={`flex-1 overflow-y-auto z-10 px-4 md:px-8 ${tela_inicial ? 'flex items-center justify-center' : 'pt-8 pb-32'}`}>
+        {/* Listagem flexível das mensagens */}
+        <div className={`flex-1 overflow-y-auto z-10 px-4 md:px-8 ${tela_inicial ? 'flex items-center justify-center' : 'pt-8'}`}>
           <div className="w-full max-w-3xl mx-auto flex flex-col relative h-full">
             
+            {/* ESTADO VAZIO: Cards iniciais */}
             {tela_inicial && (
               <div className="flex flex-col items-center justify-center w-full pb-32 mt-auto mb-auto animate-fade-in">
                 <div className="text-center mb-12">
@@ -181,8 +199,9 @@ export default function pagina_chat() {
               </div>
             )}
 
+            {/* CHAT ATIVO: Balões de conversa */}
             {!tela_inicial && (
-              <div className="flex flex-col gap-6 w-full pb-8">
+              <div className="flex flex-col gap-6 w-full">
                 {mensagens_atuais.map((msg) => (
                   <div key={msg.id} className={`flex ${msg.autor === 'usuario' ? 'justify-end' : 'justify-start'}`}>
                     {msg.autor === 'ia' && (
@@ -191,16 +210,14 @@ export default function pagina_chat() {
                       </div>
                     )}
                     <div className={`max-w-[85%] md:max-w-[75%] p-4 ${msg.autor === 'usuario' ? 'bg-slate-100 text-slate-900 rounded-2xl rounded-tr-sm' : 'bg-transparent text-slate-800'}`}>
-                      
-                      {/* O PULO DO GATO: ReactMarkdown interpreta o texto da IA */}
                       {msg.autor === 'usuario' ? (
                         <p className="text-[15px] leading-relaxed whitespace-pre-wrap">{msg.texto}</p>
                       ) : (
                         <div className="text-[15px] leading-relaxed prose max-w-none prose-p:leading-relaxed prose-pre:bg-slate-100 prose-pre:text-slate-900 marker:text-slate-400">
+                          {/* ReactMarkdown trata as quebras, listas e negritos do Gemini */}
                           <ReactMarkdown>{msg.texto}</ReactMarkdown>
                         </div>
                       )}
-
                     </div>
                   </div>
                 ))}
@@ -214,12 +231,17 @@ export default function pagina_chat() {
                   </div>
                 )}
                 
+                {/* SOLUÇÃO DO BUG: Bloco invisível com a mesma altura da caixa flutuante do input.
+                    Isso força o conteúdo real a rolar totalmente para cima, sem sumir debaixo do input. */}
+                <div className="h-40 md:h-48 w-full flex-shrink-0"></div>
+
                 <div ref={final_do_chat_ref} />
               </div>
             )}
           </div>
         </div>
 
+        {/* --- CAIXA DE TEXTO (FOOTER DO CHAT) --- */}
         <div className="absolute bottom-0 left-0 w-full p-6 z-20 bg-gradient-to-t from-white via-white to-transparent flex justify-center">
           <div className="w-full max-w-3xl flex flex-col relative">
             <form onSubmit={enviar_mensagem} className="bg-white border border-slate-200 rounded-2xl shadow-lg shadow-slate-200/50 relative flex items-end p-2 transition-all">
