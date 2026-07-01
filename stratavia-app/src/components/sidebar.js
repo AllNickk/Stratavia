@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 
+// --- ÍCONES ---
 const IconeMais = () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" strokeWidth="2.5" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>;
 const IconeDashboard = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><rect x="4" y="4" width="6" height="6" rx="1" /><rect x="14" y="4" width="6" height="6" rx="1" /><rect x="4" y="14" width="6" height="6" rx="1" /><rect x="14" y="14" width="6" height="6" rx="1" /></svg>;
 const IconeBussola = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><polyline points="8 16 10 10 16 8 14 14 8 16" /><circle cx="12" cy="12" r="9" /></svg>;
@@ -11,12 +12,16 @@ const IconeSair = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" heigh
 const IconeGlobo = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><circle cx="12" cy="12" r="9" /><line x1="3.6" y1="9" x2="20.4" y2="9" /><line x1="3.6" y1="15" x2="20.4" y2="15" /><path d="M11.5 3a17 17 0 0 0 0 18" /><path d="M12.5 3a17 17 0 0 1 0 18" /></svg>;
 const IconeMenuFechar = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><rect x="4" y="4" width="16" height="16" rx="2" /><path d="M9 4v16" /><path d="M15 10l-2 2l2 2" /></svg>;
 const IconeMenuAbrir = () => <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><rect x="4" y="4" width="16" height="16" rx="2" /><path d="M9 4v16" /><path d="M14 10l2 2l-2 2" /></svg>;
+const IconePino = () => <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M15 4.5l-4 4l-4 1.5l-1.5 1.5l7 7l1.5 -1.5l1.5 -4l4 -4" /><line x1="9" y1="15" x2="4.5" y2="19.5" /><line x1="14.5" y1="4" x2="20" y2="9.5" /></svg>;
+const IconeLixeira = () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><line x1="4" y1="7" x2="20" y2="7" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" /><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" /><path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" /></svg>;
+const IconeMaisOpcoes = () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><circle cx="12" cy="12" r="1" /><circle cx="12" cy="19" r="1" /><circle cx="12" cy="5" r="1" /></svg>;
 
 export default function Sidebar({ 
   ao_clicar_nova_analise, 
   historico_chats = [], 
   chat_ativo_id, 
-  ao_selecionar_chat 
+  ao_selecionar_chat,
+  recarregar_historico // Passado pelo pai pra forçar atualização
 }) {
   const roteador = useRouter();
   const pathname = usePathname();
@@ -24,6 +29,10 @@ export default function Sidebar({
   const [sidebar_aberta, set_sidebar_aberta] = useState(true);
   const [menu_perfil_aberto, set_menu_perfil_aberto] = useState(false);
   const [nome_usuario, set_nome_usuario] = useState("Carregando...");
+  
+  // Controle de qual chat está com o menu de opções (três pontinhos) aberto
+  const [id_menu_opcoes_aberto, set_id_menu_opcoes_aberto] = useState(null);
+  
   const perfilRef = useRef(null);
 
   useEffect(() => {
@@ -33,8 +42,6 @@ export default function Sidebar({
         if (resposta.ok) {
           const dados = await resposta.json();
           set_nome_usuario(dados.nome_completo);
-        } else {
-          set_nome_usuario("Usuário Desconhecido");
         }
       } catch (erro) {
         set_nome_usuario("Usuário Offline");
@@ -43,10 +50,15 @@ export default function Sidebar({
     buscar_usuario_logado();
   }, []);
 
+  // Fechar menus se clicar fora
   useEffect(() => {
     const lidar_clique_fora = (evento) => {
       if (perfilRef.current && !perfilRef.current.contains(evento.target)) {
         set_menu_perfil_aberto(false);
+      }
+      // Se clicar em qualquer lugar e não for no menu do chat, fecha ele
+      if (!evento.target.closest('.menu-chat-container')) {
+        set_id_menu_opcoes_aberto(null);
       }
     };
     document.addEventListener("mousedown", lidar_clique_fora);
@@ -57,14 +69,45 @@ export default function Sidebar({
     try {
       await fetch("/api/logout", { method: "POST" });
       roteador.push("/login");
-    } catch (erro) {
-      console.error("Erro ao tentar fazer logout:", erro);
-    }
+    } catch (erro) {}
   };
 
   const clicar_novo = () => {
     if (ao_clicar_nova_analise) ao_clicar_nova_analise();
     else roteador.push("/chat");
+  };
+
+  // Funções de manipulação do Chat
+  const apagar_chat = async (id, evento) => {
+    evento.stopPropagation();
+    try {
+      await fetch(`/api/chats/${id}`, { method: "DELETE" });
+      set_id_menu_opcoes_aberto(null);
+      if (chat_ativo_id === id) ao_clicar_nova_analise(); // Limpa a tela se apagou o chat atual
+      if (recarregar_historico) recarregar_historico();
+    } catch (erro) { console.error("Erro ao apagar", erro); }
+  };
+
+  const alternar_fixacao_chat = async (chat, evento) => {
+    evento.stopPropagation();
+    
+    // Regra do negócio: máximo 3 fixados
+    const qtd_fixados = historico_chats.filter(c => c.fixado).length;
+    if (!chat.fixado && qtd_fixados >= 3) {
+      alert("Você já atingiu o limite de 3 análises fixadas.");
+      set_id_menu_opcoes_aberto(null);
+      return;
+    }
+
+    try {
+      await fetch(`/api/chats/${chat._id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fixado: !chat.fixado })
+      });
+      set_id_menu_opcoes_aberto(null);
+      if (recarregar_historico) recarregar_historico();
+    } catch (erro) { console.error("Erro ao fixar", erro); }
   };
 
   const obter_classes_link = (caminho) => {
@@ -84,7 +127,7 @@ export default function Sidebar({
               <h1 className="text-xl font-bold text-slate-900 tracking-tight">Stratavia</h1>
               <p className="text-[10px] text-slate-500 uppercase tracking-widest mt-0.5">Global Nomad</p>
             </div>
-            <button onClick={() => set_sidebar_aberta(false)} className="p-1.5 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-colors" title="Recolher menu">
+            <button onClick={() => set_sidebar_aberta(false)} className="p-1.5 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-colors">
               <IconeMenuFechar />
             </button>
           </div>
@@ -138,20 +181,56 @@ export default function Sidebar({
             <div className="px-4 py-2 mt-6 mb-1">
               <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Histórico Recente</h3>
             </div>
-            <div className="space-y-1">
+            <div className="space-y-1 pb-4">
               {historico_chats.map((chat) => (
-                <a 
-                  key={chat._id} 
-                  href="#" 
-                  onClick={(e) => { e.preventDefault(); ao_selecionar_chat(chat._id); }}
-                  className={`block px-4 py-2 text-sm rounded-md truncate transition-colors ${
-                    chat_ativo_id === chat._id 
-                      ? "bg-slate-100 text-slate-900 font-semibold" 
-                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                  }`}
-                >
-                  {chat.titulo}
-                </a>
+                <div key={chat._id} className="relative menu-chat-container group">
+                  <a 
+                    href="#" 
+                    onClick={(e) => { e.preventDefault(); ao_selecionar_chat(chat._id); }}
+                    className={`flex items-center justify-between px-4 py-2 text-sm rounded-md transition-colors pr-10 ${
+                      chat_ativo_id === chat._id 
+                        ? "bg-slate-100 text-slate-900 font-semibold" 
+                        : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                    }`}
+                  >
+                    <div className="truncate flex items-center gap-2">
+                      {/* O ícone de pino aparece do lado do título se tiver fixado */}
+                      {chat.fixado && <span className="text-emerald-600 flex-shrink-0"><IconePino /></span>}
+                      <span className="truncate">{chat.titulo}</span>
+                    </div>
+                  </a>
+                  
+                  {/* Botão de 3 pontinhos (aparece só no hover do mouse) */}
+                  <button 
+                    onClick={(e) => { 
+                      e.stopPropagation(); 
+                      set_id_menu_opcoes_aberto(id_menu_opcoes_aberto === chat._id ? null : chat._id);
+                    }}
+                    className={`absolute right-2 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-200 rounded transition-all ${
+                      id_menu_opcoes_aberto === chat._id ? "opacity-100 bg-slate-200 text-slate-700" : "opacity-0 group-hover:opacity-100"
+                    }`}
+                  >
+                    <IconeMaisOpcoes />
+                  </button>
+
+                  {/* Dropdown Menu de opções do Chat */}
+                  {id_menu_opcoes_aberto === chat._id && (
+                    <div className="absolute right-2 top-8 w-36 bg-white border border-slate-200 shadow-lg rounded-md overflow-hidden z-50 py-1">
+                      <button 
+                        onClick={(e) => alternar_fixacao_chat(chat, e)}
+                        className="w-full text-left px-3 py-2 text-[13px] text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                      >
+                        <IconePino /> {chat.fixado ? 'Desfixar' : 'Fixar no topo'}
+                      </button>
+                      <button 
+                        onClick={(e) => apagar_chat(chat._id, e)}
+                        className="w-full text-left px-3 py-2 text-[13px] text-red-600 hover:bg-red-50 flex items-center gap-2 font-medium"
+                      >
+                        <IconeLixeira /> Excluir
+                      </button>
+                    </div>
+                  )}
+                </div>
               ))}
             </div>
           </>

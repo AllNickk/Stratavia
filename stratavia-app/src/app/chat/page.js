@@ -1,8 +1,8 @@
-// src/app/chat/page.js
 "use client";
 
 import { useState, useRef, useEffect } from "react";
 import Sidebar from "@/components/sidebar";
+import ReactMarkdown from 'react-markdown'; // <--- AQUI! Interpretador de formatação
 
 const IconeDashboard = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><rect x="4" y="4" width="6" height="6" rx="1" /><rect x="14" y="4" width="6" height="6" rx="1" /><rect x="4" y="14" width="6" height="6" rx="1" /><rect x="14" y="14" width="6" height="6" rx="1" /></svg>;
 const IconeBussola = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><polyline points="8 16 10 10 16 8 14 14 8 16" /><circle cx="12" cy="12" r="9" /></svg>;
@@ -20,19 +20,19 @@ export default function pagina_chat() {
   const [ia_pensando, set_ia_pensando] = useState(false);
   const final_do_chat_ref = useRef(null);
 
-  // Assim que a tela carregar, a gente puxa todos os chats do usuário
-  useEffect(() => {
-    const carregar_historico = async () => {
-      try {
-        const resposta = await fetch("/api/chats");
-        if (resposta.ok) {
-          const dados = await resposta.json();
-          set_historico_chats(dados.chats);
-        }
-      } catch (erro) {
-        console.error("Erro ao carregar histórico:", erro);
+  const carregar_historico = async () => {
+    try {
+      const resposta = await fetch("/api/chats");
+      if (resposta.ok) {
+        const dados = await resposta.json();
+        set_historico_chats(dados.chats);
       }
-    };
+    } catch (erro) {
+      console.error("Erro ao carregar histórico:", erro);
+    }
+  };
+
+  useEffect(() => {
     carregar_historico();
   }, []);
 
@@ -42,18 +42,16 @@ export default function pagina_chat() {
     }
   }, [mensagens_atuais, ia_pensando]);
 
-  // Função disparada pela Sidebar
   const iniciar_novo_chat = () => {
     set_chat_ativo_id(null);
     set_mensagens_atuais([]);
     set_texto_digitado("");
   };
 
-  // Função disparada pela Sidebar quando clica num chat do histórico
   const carregar_chat_especifico = async (id_do_chat) => {
     set_chat_ativo_id(id_do_chat);
     set_ia_pensando(true);
-    set_mensagens_atuais([]); // Limpa a tela pra dar a sensação de carregando
+    set_mensagens_atuais([]); 
     
     try {
       const resposta = await fetch(`/api/chats/${id_do_chat}`);
@@ -76,13 +74,11 @@ export default function pagina_chat() {
     set_texto_digitado("");
     set_ia_pensando(true);
 
-    // Adiciona visualmente pra ficar super rápido pro usuário (Optimistic UI)
     const mensagem_provisoria = { id: Date.now().toString(), autor: "usuario", texto: texto_enviado };
     set_mensagens_atuais((anteriores) => [...anteriores, mensagem_provisoria]);
 
     try {
       if (!chat_ativo_id) {
-        // É a PRIMEIRA MENSAGEM. Cria o chat inteiro no banco.
         const resposta = await fetch("/api/chats", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -92,11 +88,9 @@ export default function pagina_chat() {
         if (dados.sucesso) {
           set_chat_ativo_id(dados.chat._id);
           set_mensagens_atuais(dados.chat.mensagens);
-          // Coloca ele no topo da barra lateral
-          set_historico_chats((anteriores) => [dados.chat, ...anteriores]); 
+          carregar_historico(); // Atualiza a lista da barra lateral
         }
       } else {
-        // O chat JÁ EXISTE. Só adicionamos a nova mensagem.
         const resposta = await fetch(`/api/chats/${chat_ativo_id}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -105,6 +99,7 @@ export default function pagina_chat() {
         const dados = await resposta.json();
         if (dados.sucesso) {
           set_mensagens_atuais(dados.chat.mensagens);
+          carregar_historico(); // Para jogar o chat ativo pro topo da lista
         }
       }
     } catch (erro) {
@@ -133,12 +128,12 @@ export default function pagina_chat() {
   return (
     <div className="fixed inset-0 z-[100] flex bg-white font-sans text-slate-900 overflow-hidden">
       
-      {/* Sidebar recebendo as propriedades de inteligência */}
       <Sidebar 
         ao_clicar_nova_analise={iniciar_novo_chat} 
         historico_chats={historico_chats}
         chat_ativo_id={chat_ativo_id}
         ao_selecionar_chat={carregar_chat_especifico}
+        recarregar_historico={carregar_historico} // Passamos a função de atualizar a tela
       />
 
       <main className="flex-1 flex flex-col h-full relative w-full bg-[#fcfcfc]">
@@ -196,7 +191,16 @@ export default function pagina_chat() {
                       </div>
                     )}
                     <div className={`max-w-[85%] md:max-w-[75%] p-4 ${msg.autor === 'usuario' ? 'bg-slate-100 text-slate-900 rounded-2xl rounded-tr-sm' : 'bg-transparent text-slate-800'}`}>
-                      <p className="text-[15px] leading-relaxed whitespace-pre-wrap">{msg.texto}</p>
+                      
+                      {/* O PULO DO GATO: ReactMarkdown interpreta o texto da IA */}
+                      {msg.autor === 'usuario' ? (
+                        <p className="text-[15px] leading-relaxed whitespace-pre-wrap">{msg.texto}</p>
+                      ) : (
+                        <div className="text-[15px] leading-relaxed prose max-w-none prose-p:leading-relaxed prose-pre:bg-slate-100 prose-pre:text-slate-900 marker:text-slate-400">
+                          <ReactMarkdown>{msg.texto}</ReactMarkdown>
+                        </div>
+                      )}
+
                     </div>
                   </div>
                 ))}
