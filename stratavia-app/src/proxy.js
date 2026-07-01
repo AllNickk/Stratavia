@@ -14,7 +14,7 @@ export function proxy(requisicao) {
     }
   }
 
-  const rotas_protegidas = ['/chat'];
+  const rotas_protegidas = ['/chat', '/dashboard', '/exploration', '/settings'];
   
   if (rotas_protegidas.includes(url_atual) && !usuario_logado) {
     return NextResponse.redirect(new URL('/login', requisicao.url));
