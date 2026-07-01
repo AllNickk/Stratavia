@@ -21,7 +21,7 @@ export default function Sidebar({
   chat_ativo_id, 
   ao_selecionar_chat,
   recarregar_historico,
-  nome_usuario // Recebemos o nome via propriedade agora
+  nome_usuario 
 }) {
   const roteador = useRouter();
   const pathname = usePathname();
@@ -62,7 +62,7 @@ export default function Sidebar({
     try {
       await fetch(`/api/chats/${id}`, { method: "DELETE" });
       set_id_menu_opcoes_aberto(null);
-      if (chat_ativo_id === id) ao_clicar_nova_analise(); 
+      if (chat_ativo_id === id && ao_clicar_nova_analise) ao_clicar_nova_analise(); 
       if (recarregar_historico) recarregar_historico();
     } catch (erro) { console.error("Erro ao apagar", erro); }
   };
@@ -162,7 +162,11 @@ export default function Sidebar({
                 <div key={chat._id} className="relative menu-chat-container group">
                   <a 
                     href="#" 
-                    onClick={(e) => { e.preventDefault(); ao_selecionar_chat(chat._id); }}
+                    onClick={(e) => { 
+                      e.preventDefault(); 
+                      if (ao_selecionar_chat) ao_selecionar_chat(chat._id); 
+                      else roteador.push('/chat'); 
+                    }}
                     className={`flex items-center justify-between px-4 py-2 text-sm rounded-md transition-colors pr-10 ${
                       chat_ativo_id === chat._id 
                         ? "bg-slate-100 text-slate-900 font-semibold" 
@@ -207,7 +211,8 @@ export default function Sidebar({
       <div ref={perfilRef} className="mt-auto relative p-4 border-t border-slate-200">
         {menu_perfil_aberto && (
           <div className="absolute bottom-[110%] left-4 mb-2 w-48 bg-white border border-slate-200 shadow-xl rounded-xl overflow-hidden z-50 animate-fade-in">
-            <button className="w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-3 transition-colors">
+            {/* AQUI FOI O AJUSTE: O botão fecha o menu e manda pra tela de configurações */}
+            <button onClick={() => { set_menu_perfil_aberto(false); roteador.push('/settings'); }} className="w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-3 transition-colors">
               <IconeConfig /> Configurações
             </button>
             <div className="h-px bg-slate-200 w-full"></div>
