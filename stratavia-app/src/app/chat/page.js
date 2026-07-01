@@ -1,4 +1,3 @@
-// src/app/chat/page.js
 "use client";
 
 import { useState, useRef, useEffect } from "react";
@@ -147,11 +146,9 @@ export default function pagina_chat() {
   const tela_inicial = mensagens_atuais.length === 0 && !chat_ativo_id;
 
   return (
-    // AQUI ESTÁ A CORREÇÃO: "print:static print:block print:h-auto print:overflow-visible" 
-    // Isso tira a trava de tela cheia para a impressora conseguir criar novas páginas.
     <div className="fixed inset-0 z-[100] flex bg-white font-sans text-slate-900 overflow-hidden print:static print:block print:h-auto print:overflow-visible">
       
-      {/* 1. TELA DA APLICAÇÃO NORMAL (Fica invisível na impressão por causa do print:hidden) */}
+      {/* 1. TELA DA APLICAÇÃO NORMAL */}
       <div className="flex w-full h-full print:hidden">
         <Sidebar 
           nome_usuario={nome_usuario}
@@ -240,15 +237,18 @@ export default function pagina_chat() {
                     </div>
                   )}
                   
-                  <div className="h-40 md:h-48 w-full flex-shrink-0"></div>
+                  {/* Aumentei um pouco a margem do bloco fantasma para acomodar o aviso novo */}
+                  <div className="h-44 md:h-52 w-full flex-shrink-0"></div>
                   <div ref={final_do_chat_ref} />
                 </div>
               )}
             </div>
           </div>
 
-          <div className="absolute bottom-0 left-0 w-full p-6 z-20 bg-gradient-to-t from-white via-white to-transparent flex justify-center">
+          {/* CAIXA DE TEXTO E AVISO (FOOTER DO CHAT) */}
+          <div className="absolute bottom-0 left-0 w-full p-6 z-20 bg-gradient-to-t from-white via-white to-transparent flex justify-center print:hidden">
             <div className="w-full max-w-3xl flex flex-col relative">
+              
               <form onSubmit={enviar_mensagem} className="bg-white border border-slate-200 rounded-2xl shadow-lg shadow-slate-200/50 relative flex items-end p-2 transition-all">
                 <div className="flex-1">
                   <textarea 
@@ -268,15 +268,19 @@ export default function pagina_chat() {
                   </button>
                 </div>
               </form>
+
+              {/* AQUI ESTÁ O AVISO DE RESPONSABILIDADE DA IA */}
+              <div className="text-center mt-3">
+                <p className="text-[11px] text-slate-400 font-medium">O Stratavia é uma IA e pode cometer erros. Por isso, lembre-se de conferir informações relevantes.</p>
+              </div>
+
             </div>
           </div>
         </main>
       </div>
 
-      {/* 2. TELA EXCLUSIVA PARA IMPRESSÃO PDF (Totalmente reformulada, só aparece ao clicar em Exportar) */}
+      {/* 2. TELA EXCLUSIVA PARA IMPRESSÃO PDF */}
       <div className="hidden print:block max-w-4xl mx-auto p-8 bg-white font-sans text-slate-900 w-full">
-        
-        {/* Cabeçalho do Documento */}
         <div className="flex justify-between items-end border-b-2 border-slate-900 pb-4 mb-8">
           <div>
             <h1 className="text-4xl font-bold text-slate-900 tracking-tight">Stratavia</h1>
@@ -287,7 +291,6 @@ export default function pagina_chat() {
 
         <h2 className="text-2xl font-bold text-slate-900 mb-8 border-l-4 border-emerald-500 pl-4">Relatório de Consulta Geoeconômica</h2>
 
-        {/* Metadados */}
         <div className="bg-slate-50 border border-slate-200 p-5 mb-10 rounded-sm">
           <div className="grid grid-cols-2 gap-y-6">
             <div>
@@ -309,7 +312,6 @@ export default function pagina_chat() {
           </div>
         </div>
 
-        {/* Diálogos com quebra de página inteligente (break-inside-avoid) */}
         <div className="space-y-8">
           {mensagens_atuais.map((msg) => (
             <div key={msg.id} className="border-b border-slate-200 pb-8 break-inside-avoid">
@@ -329,7 +331,6 @@ export default function pagina_chat() {
           ))}
         </div>
 
-        {/* Rodapé do PDF */}
         <div className="mt-16 pt-6 border-t border-dashed border-slate-300 text-center text-xs text-slate-400">
           As informações contidas neste relatório são geradas por inteligência artificial e consolidadas de forma confidencial. Devem ser verificadas com consultores fiscais e jurídicos licenciados.
         </div>
